@@ -1,50 +1,81 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
+const Dishes = require('../models/dishes')
 
 const dishRouter = express.Router();
 
 dishRouter.use(bodyParser.json());
 
 dishRouter.route('/')
-.all((req,res,next) => {
-    res.statusCode=200;
-    res.setHeader('Content-type', 'text/plain');
-    next();
-})
 .get((req,res,next) => {
-    res.end("Enviaraemos todos los platos a usted");
+    Dishes.find({})
+    .then((dishes) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type','application/json');
+        res.json(dishes);
+    }, (err) => next(err))
+    .catch((err) => next(err))
 })
 .post((req,res,next) => {
-    res.end('Agregaremos el plato '+ req.body.name +' con los detalles '+ req.body.description);
+   Dishes.create(req.body)
+   .then((dish) => {
+       console.log('Dish created', dish);
+       res.statusCode = 200;
+       res.setHeader('Content-Type','application/json');
+       res.json(dish);   
+   }, (err) => next(err))
+   .catch((err) => next(err))
 })
 .put((req,res,next) => {
     res.statusCode = 403;
     res.end('Operacion PUT no admitida en /platos');
 })
 .delete((req,res,next) => {
-    res.end('Eliminaremos todos los platos');
+    Dishes.remove({})
+    .then((resp) => {
+       res.statusCode = 200;
+       res.setHeader('Content-Type','application/json');
+       res.json(resp);
+    },(err) => next(err))
+    .catch((err) => next(err))
 });
 
 
 dishRouter.route('/:dishId')
-.all((req,res,next) => {
-    res.statusCode=200;
-    res.setHeader('Content-type', 'text/plain');
-    next();
-})
 .get((req,res,next) => {
-    res.end('Enviaraemos detalles sobre el plato '+ req.params.dishId);
+    Dishes.findById(req.params.dishId)
+    .then((dish) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type','application/json');
+        res.json(dish);   
+    }, (err) => next(err))
+    .catch((err) => next(err))
 })
 .post((req,res,next) => {
     res.statusCode = 403;
     res.end('Operacion POST no admitida en /dish/'+req.params.dishId);
 })
 .put((req,res,next) => {
-    res.write('Actualizando el plato: ' + req.params.dishId);
-    res.end('Actualizamos el plato: '+ req.body.name +' con los detalles '+req.body.description);
-})
+    Dishes.findByIdAndUpdate(req.params.dishId, {
+        $set: req.boddy
+    }, {new: true})
+    .then((dish) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type','application/json');
+        res.json(dish);   
+    }, (err) => next(err))
+    .catch((err) => next(err))
+    })
 .delete((req,res,next) => {
-    res.end('Eliminaremos el plato: '+req.params.dishId);
+    Dishes.findByIdAndRemove(req.params.dishId)
+    .then((resp) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type','application/json');
+        res.json(resp);
+     },(err) => next(err))
+     .catch((err) => next(err))
 });
 
 module.exports = dishRouter;
