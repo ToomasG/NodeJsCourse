@@ -34,36 +34,55 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('12345-67890-09876-54321'));
 
 function auth(req, res, next) {
-  console.log(req.headers);
+  console.log(req.signedCookies);
+//aca verificamos que el usuario de la cookie no existe o que la cookie en si no exista
+  if(!req.signedCookies.user){
+    //hacemos una autorizacion basica
+    var authHeader = req.headers.authorization;
+    //si no es existosa la autorizacion, entra en este if
+     if (!authHeader) {
+     var err = new Error("Yo are not authenticated!");
 
-  var authHeader = req.headers.authorization;
+     res.setHeader('www-Authenticate', 'Basic');
+     err.status = 401;
+     return next(err);
+     }
+   
+    var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
 
-  if (!authHeader){
-    var err = new Error("Yo are not authenticated!");
+    var username = auth[0];
+    var password = auth[1];
+  //si la autorizacion es exitosa, configuro la cookie
+     if(username === 'admin' && password === 'password'){
+       res.cookie('user', 'admin', { signed: true});
+     next(); // autorizado
+     }
+     else {
+     var err = new Error("Yo are not authenticated!");
 
-    res.setHeader('www-Authenticate', 'Basic');
-    err.status = 401;
-    return next(err);
-  }
-  
-  var auth = new Buffer(authHeader.split(' ')[1], 'base64').toString().split(':');
-
-  var username = auth[0];
-  var password = auth[1];
-
-  if(username === 'admin' && password === 'password'){
-    next();
+     res.setHeader('www-Authentication', 'Basic');
+     err.status = 401;
+     return next(err);
+    }
   }
   else {
-    var err = new Error("Yo are not authenticated!");
+    //compruebo que la cookie firmada es valida y si contiene la propiedad user = `admin`
+    if(req.signedCookies.user === 'admin'){
+     //si se cumple esto, entyonces es un acceso authorizado y permite ingresar, o NEXT
+      next();
+    }
+    else {
+      var err = new Error("Yo are not authenticated!");
 
-    res.setHeader('www-Authentication', 'Basic');
-    err.status = 401;
-    return next(err);
+     res.setHeader('www-Authentication', 'Basic');
+     err.status = 401;
+     return next(err);
+    }
   }
+  
 }
 
 app.use(auth);
