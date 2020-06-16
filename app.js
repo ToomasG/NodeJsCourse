@@ -3,6 +3,8 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
 
 
 var indexRouter = require('./routes/index');
@@ -14,6 +16,7 @@ var promoRouter = require('./routes/promoRouter');
 var mongoose = require('mongoose');
 
 const Dishes = require('./models/dishes');
+
 
 const url = 'mongodb://localhost:27017/conFusion';
 const connect = mongoose.connect(url, {useUnifiedTopology: true, useNewUrlParser: true});
@@ -34,12 +37,21 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser('12345-67890-09876-54321'));
+//app.use(cookieParser('12345-67890-09876-54321'));
+
+app.use(session({
+  name: 'session-id',
+  secret: '12345-67890-09876-54321',
+  saveUninitialized: false,
+  resave: false,
+  store: new FileStore()
+}))
+  
 
 function auth(req, res, next) {
-  console.log(req.signedCookies);
+  console.log(req.session);
 //aca verificamos que el usuario de la cookie no existe o que la cookie en si no exista
-  if(!req.signedCookies.user){
+  if(!req.session.user){
     //hacemos una autorizacion basica
     var authHeader = req.headers.authorization;
     //si no es existosa la autorizacion, entra en este if
@@ -57,8 +69,8 @@ function auth(req, res, next) {
     var password = auth[1];
   //si la autorizacion es exitosa, configuro la cookie
      if(username === 'admin' && password === 'password'){
-       res.cookie('user', 'admin', { signed: true});
-     next(); // autorizado
+       req.session.user = 'admin';
+       next(); // autorizado
      }
      else {
      var err = new Error("Yo are not authenticated!");
@@ -70,7 +82,7 @@ function auth(req, res, next) {
   }
   else {
     //compruebo que la cookie firmada es valida y si contiene la propiedad user = `admin`
-    if(req.signedCookies.user === 'admin'){
+    if(req.session.user === 'admin'){
      //si se cumple esto, entyonces es un acceso authorizado y permite ingresar, o NEXT
       next();
     }
