@@ -47,50 +47,26 @@ app.use(session({
   store: new FileStore()
 }))
   
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
 
 function auth(req, res, next) {
   console.log(req.session);
 //aca verificamos que el usuario de la cookie no existe o que la cookie en si no exista
   if(!req.session.user){
-    //hacemos una autorizacion basica
-    var authHeader = req.headers.authorization;
-    //si no es existosa la autorizacion, entra en este if
-     if (!authHeader) {
      var err = new Error("Yo are not authenticated!");
-
-     res.setHeader('www-Authenticate', 'Basic');
      err.status = 401;
      return next(err);
-     }
-   
-    var auth = new Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
-
-    var username = auth[0];
-    var password = auth[1];
-  //si la autorizacion es exitosa, configuro la cookie
-     if(username === 'admin' && password === 'password'){
-       req.session.user = 'admin';
-       next(); // autorizado
-     }
-     else {
-     var err = new Error("Yo are not authenticated!");
-
-     res.setHeader('www-Authentication', 'Basic');
-     err.status = 401;
-     return next(err);
-    }
+    
   }
   else {
-    //compruebo que la cookie firmada es valida y si contiene la propiedad user = `admin`
-    if(req.session.user === 'admin'){
+    if(req.session.user === 'authenticated'){
      //si se cumple esto, entyonces es un acceso authorizado y permite ingresar, o NEXT
-      next();
+     next();
     }
     else {
-      var err = new Error("Yo are not authenticated!");
-
-     res.setHeader('www-Authentication', 'Basic');
-     err.status = 401;
+     var err = new Error("Yo are not authenticated!");
+     err.status = 403;
      return next(err);
     }
   }
@@ -102,8 +78,7 @@ app.use(auth);
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+
 app.use('/dishes', dishRouter);
 app.use('/promotions', promoRouter);
 app.use('/leaders', leaderRouter);
