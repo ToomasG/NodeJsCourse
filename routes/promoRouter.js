@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const authenticate = require('../authenticate');
 
 const Promotions = require('../models/promotions')
 
@@ -18,7 +19,7 @@ promoRouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err))
 })
-.post((req,res,next) => {
+.post(authenticate.verfyUser,(req,res,next) => {
     Promotions.create(req.body)
    .then((promotion) => {
        console.log('Promotion created', promotion);
@@ -28,11 +29,11 @@ promoRouter.route('/')
    }, (err) => next(err))
    .catch((err) => next(err))
 })
-.put((req,res,next) => {
+.put(authenticate.verfyUser,(req,res,next) => {
     res.statusCode = 403;
     res.end('Operacion PUT no admitida en /promotions');
 })
-.delete((req,res,next) => {
+.delete(authenticate.verfyUser,(req,res,next) => {
     Promotions.remove({})
     .then((resp) => {
        res.statusCode = 200;
@@ -52,11 +53,11 @@ promoRouter.route('/:promotionId')
     }, (err) => next(err))
     .catch((err) => next(err))
 })
-.post((req,res,next) => {
+.post(authenticate.verfyUser,(req,res,next) => {
     res.statusCode = 403;
     res.end('Operacion POST no admitida en /promotions/'+req.params.promotionId);
 })
-.put((req,res,next) => {
+.put(authenticate.verfyUser,(req,res,next) => {
     Promotions.findByIdAndUpdate(req.params.promotionId, {
         $set: req.body
     }, {new: true})
@@ -67,7 +68,7 @@ promoRouter.route('/:promotionId')
     }, (err) => next(err))
     .catch((err) => next(err))
     })
-.delete((req,res,next) => {
+.delete(authenticate.verfyUser,(req,res,next) => {
     Promotions.findByIdAndRemove(req.params.promotionId)
     .then((resp) => {
         res.statusCode = 200;
