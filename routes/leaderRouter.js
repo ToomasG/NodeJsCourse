@@ -19,7 +19,7 @@ leaderRouter.route('/')
     }, (err) => next(err))
     .catch((err) => next(err))
 })
-.post(authenticate.verfyUser,(req,res,next) => {
+.post(authenticate.verfyUser,authenticate.verfyAdmin,(req,res,next) => {
    Leaders.create(req.body)
    .then((leader) => {
        console.log('Leader created', leader);
@@ -29,11 +29,11 @@ leaderRouter.route('/')
    }, (err) => next(err))
    .catch((err) => next(err))
 })
-.put(authenticate.verfyUser,(req,res,next) => {
+.put(authenticate.verfyUser,authenticate.verfyAdmin,(req,res,next) => {
     res.statusCode = 403;
     res.end('Operacion PUT no admitida en /leaders');
 })
-.delete(authenticate.verfyUser,(req,res,next) => {
+.delete(authenticate.verfyUser,authenticate.verfyAdmin,(req,res,next) => {
     Leaders.remove({})
     .then((resp) => {
        res.statusCode = 200;
@@ -54,11 +54,11 @@ leaderRouter.route('/:leaderId')
     }, (err) => next(err))
     .catch((err) => next(err))
 })
-.post(authenticate.verfyUser,(req,res,next) => {
+.post(authenticate.verfyUser,authenticate.verfyAdmin,(req,res,next) => {
     res.statusCode = 403;
     res.end('Operacion POST no admitida en /leaders/'+req.params.leaderId);
 })
-.put(authenticate.verfyUser,(req,res,next) => {
+.put(authenticate.verfyUser,authenticate.verfyAdmin,(req,res,next) => {
     Leaders.findByIdAndUpdate(req.params.leaderId, {
         $set: req.body
     }, {new: true})
@@ -69,7 +69,7 @@ leaderRouter.route('/:leaderId')
     }, (err) => next(err))
     .catch((err) => next(err))
     })
-.delete(authenticate.verfyUser,(req,res,next) => {
+.delete(authenticate.verfyUser,authenticate.verfyAdmin,(req,res,next) => {
     Leaders.findByIdAndRemove(req.params.leaderId)
     .then((resp) => {
         res.statusCode = 200;

@@ -9,9 +9,16 @@ var router = express.Router();
 router.use(bodyParser.json());
 
 /* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
-});
+router.get('/',authenticate.verfyUser,authenticate.verfyAdmin, (req, res, next) => {
+  User.find({})
+  .then((users) => {
+      res.statusCode = 200;
+      res.setHeader('Content-Type','application/json');
+      res.json(users);
+    }, (err) => next(err))
+    .catch((err) => next(err))
+    
+  });
 
 router.post('/signup', (req,res,next) => {
   User.register(new User({username: req.body.username}),
@@ -46,7 +53,7 @@ router.post('/signup', (req,res,next) => {
 });
 
 //iniciar sesion
-router.post('/login', passport.authenticate('local'), (req,res,next) => {
+router.post('/login', passport.authenticate('local'), (req,res) => {
   var token = authenticate.getToken({_id : req.user._id})
   res.statusCode = 200;
   res.setHeader('Content-Type', 'Aplication/json');
@@ -61,7 +68,7 @@ router.get('/logout', (req, res) =>{
     res.redirect('/');
   }
   else {
-    var err = new Error('Your are not logged in!');
+       var  err = new Error('Your are not logged in!');
         err.status = 403;
         next(err);
   }
